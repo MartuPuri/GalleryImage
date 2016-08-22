@@ -19,6 +19,7 @@ public class GalleryActivity extends AppCompatActivity {
 
     private static final String GALLERY_ITEMS = "GALLERY_ITEMS";
     private final Set<GalleryPhoto> selectedPhotos = new HashSet<>();
+    private boolean editModeEnabled;
 
 
     public static Intent getIntent(Context context, ArrayList<GalleryItem> galleryItems) {
@@ -52,5 +53,17 @@ public class GalleryActivity extends AppCompatActivity {
 
     public void removePhotoSelected(GalleryPhoto galleryPhoto) {
         selectedPhotos.remove(galleryPhoto);
+    }
+
+    public void enableEditMode() {
+        editModeEnabled = true;
+    }
+
+    public void disableEditMode() {
+        editModeEnabled = false;
+    }
+
+    public boolean isEditModeEnabled() {
+        return editModeEnabled;
     }
 }

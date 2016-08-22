@@ -9,6 +9,7 @@ import com.nostra13.universalimageloader.cache.memory.impl.LruMemoryCache;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import java.io.File;
 
@@ -56,7 +57,7 @@ public final class ImageLoaderUtils {
         imageLoaderInstance.init(config);
     }
 
-    public static void displayImage(String imageUrl, ImageView view) {
+    public static void displayImage(String imageUrl, ImageView view, ImageLoadingListener imageLoadingListener) {
         DisplayImageOptions displayImageOptions = new DisplayImageOptions.Builder()
                 .cacheInMemory(true)
                 .cacheOnDisk(true)
@@ -66,6 +67,6 @@ public final class ImageLoaderUtils {
                 .resetViewBeforeLoading(true)
                 .build();
 
-        imageLoaderInstance.displayImage(imageUrl, view, displayImageOptions);
+        imageLoaderInstance.displayImage(imageUrl, view, displayImageOptions, imageLoadingListener);
     }
 }

@@ -11,6 +11,8 @@ import java.util.List;
 
 import masacre.galleryimage.activities.GalleryActivity;
 import masacre.galleryimage.interfaces.OnAlbumClickListener;
+import masacre.galleryimage.interfaces.OnPhotoClickListener;
+import masacre.galleryimage.model.GalleryAlbum;
 import masacre.galleryimage.model.GalleryItem;
 import masacre.galleryimage.viewholder.GalleryAlbumViewHolder;
 import masacre.galleryimage.viewholder.GalleryPhotoViewHolder;
@@ -20,12 +22,18 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryViewHolder> {
     private List<GalleryItem> galleryItems;
     private OnAlbumClickListener albumClickListener;
     private GalleryActivity galleryActivity;
+    private OnPhotoClickListener photoClickListener;
+    private GalleryAlbum galleryAlbum;
 
-    public GalleryAdapter(List<GalleryItem> galleryItems, OnAlbumClickListener albumClickListener, GalleryActivity galleryActivity) {
+    public GalleryAdapter(List<GalleryItem> galleryItems, OnAlbumClickListener albumClickListener,
+                          GalleryActivity galleryActivity, OnPhotoClickListener photoClickListener,
+                          GalleryAlbum galleryAlbum) {
         this.galleryItems = new ArrayList<>();
         this.galleryItems.addAll(galleryItems);
         this.albumClickListener = albumClickListener;
         this.galleryActivity = galleryActivity;
+        this.photoClickListener = photoClickListener;
+        this.galleryAlbum = galleryAlbum;
     }
 
     @Override
@@ -33,7 +41,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryViewHolder> {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         if (GalleryType.PHOTO.ordinal() == viewType) {
             View view = inflater.inflate(R.layout.gallery_photo, parent, false);
-            return new GalleryPhotoViewHolder(view, galleryActivity);
+            return new GalleryPhotoViewHolder(view, galleryActivity, photoClickListener);
         } else if (GalleryType.ALBUM.ordinal() == viewType) {
             View view = inflater.inflate(R.layout.gallery_album, parent, false);
             return new GalleryAlbumViewHolder(view, albumClickListener);
@@ -57,6 +65,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryViewHolder> {
     @Override
     public void onBindViewHolder(GalleryViewHolder holder, int position) {
         GalleryItem galleryItem = getItem(position);
+        galleryItem.setParent(galleryAlbum);
         if (galleryItem != null) {
             holder.show(galleryItem);
         }

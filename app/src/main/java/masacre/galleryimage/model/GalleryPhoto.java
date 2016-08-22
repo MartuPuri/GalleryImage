@@ -5,7 +5,7 @@ import android.os.Parcel;
 
 import java.io.File;
 
-public class GalleryPhoto implements GalleryItem {
+public class GalleryPhoto extends GalleryItem {
     private final File imageFile;
 
     public GalleryPhoto(final File imageFile) {
