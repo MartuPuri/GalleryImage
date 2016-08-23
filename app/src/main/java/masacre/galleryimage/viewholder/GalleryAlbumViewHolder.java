@@ -4,19 +4,19 @@ import android.view.View;
 import android.widget.TextView;
 
 import masacre.galleryimage.R;
-import masacre.galleryimage.interfaces.OnAlbumClickListener;
+import masacre.galleryimage.interfaces.OnGalleryItemClick;
 import masacre.galleryimage.model.GalleryAlbum;
 import masacre.galleryimage.model.GalleryItem;
 
 public class GalleryAlbumViewHolder extends GalleryViewHolder implements View.OnClickListener{
     private final TextView name;
-    private final OnAlbumClickListener albumClickListener;
+    private final OnGalleryItemClick onGalleryItemClick;
     private GalleryAlbum galleryAlbum;
 
-    public GalleryAlbumViewHolder(View itemView, OnAlbumClickListener albumClickListener) {
+    public GalleryAlbumViewHolder(View itemView, OnGalleryItemClick onGalleryItemClick) {
         super(itemView);
         itemView.setOnClickListener(this);
-        this.albumClickListener = albumClickListener;
+        this.onGalleryItemClick = onGalleryItemClick;
         this.name = (TextView) itemView.findViewById(R.id.album);
     }
 
@@ -28,8 +28,8 @@ public class GalleryAlbumViewHolder extends GalleryViewHolder implements View.On
 
     @Override
     public void onClick(View view) {
-        if (albumClickListener != null) {
-            albumClickListener.onAlbumClick(view, galleryAlbum);
+        if (onGalleryItemClick != null) {
+            onGalleryItemClick.onAlbumClick(view, galleryAlbum);
         }
     }
 }

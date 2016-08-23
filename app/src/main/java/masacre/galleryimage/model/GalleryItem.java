@@ -8,7 +8,7 @@ public abstract class GalleryItem implements Parcelable{
 
     public abstract boolean isAlbum();
 
-    public void setParent(GalleryAlbum parent) {
+    void setParent(GalleryAlbum parent) {
         this.parent = parent;
     }
 

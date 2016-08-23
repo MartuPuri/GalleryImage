@@ -12,15 +12,14 @@ import java.util.Set;
 
 import masacre.galleryimage.R;
 import masacre.galleryimage.fragments.GalleryFragment;
+import masacre.galleryimage.interfaces.GalleryPhotoActions;
 import masacre.galleryimage.model.GalleryItem;
 import masacre.galleryimage.model.GalleryPhoto;
 
-public class GalleryActivity extends AppCompatActivity {
+public class GalleryActivity extends AppCompatActivity implements GalleryPhotoActions {
 
     private static final String GALLERY_ITEMS = "GALLERY_ITEMS";
     private final Set<GalleryPhoto> selectedPhotos = new HashSet<>();
-    private boolean editModeEnabled;
-
 
     public static Intent getIntent(Context context, ArrayList<GalleryItem> galleryItems) {
         Intent intent = new Intent(context, GalleryActivity.class);
@@ -43,27 +42,18 @@ public class GalleryActivity extends AppCompatActivity {
         }
     }
 
-    public void addPhotoSelected(GalleryPhoto galleryPhoto) {
+    @Override
+    public void selectPhoto(GalleryPhoto galleryPhoto) {
         selectedPhotos.add(galleryPhoto);
     }
 
-    public boolean isPhotoSelected(GalleryPhoto galleryPhoto) {
-        return selectedPhotos.contains(galleryPhoto);
-    }
-
-    public void removePhotoSelected(GalleryPhoto galleryPhoto) {
+    @Override
+    public void unselectPhoto(GalleryPhoto galleryPhoto) {
         selectedPhotos.remove(galleryPhoto);
     }
 
-    public void enableEditMode() {
-        editModeEnabled = true;
-    }
-
-    public void disableEditMode() {
-        editModeEnabled = false;
-    }
-
-    public boolean isEditModeEnabled() {
-        return editModeEnabled;
+    @Override
+    public boolean isPhotoSelected(GalleryPhoto galleryPhoto) {
+        return selectedPhotos.contains(galleryPhoto);
     }
 }

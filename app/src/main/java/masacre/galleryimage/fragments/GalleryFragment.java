@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -25,30 +26,30 @@ import java.util.List;
 
 import masacre.galleryimage.GalleryAdapter;
 import masacre.galleryimage.R;
-import masacre.galleryimage.activities.GalleryActivity;
-import masacre.galleryimage.interfaces.OnAlbumClickListener;
+import masacre.galleryimage.interfaces.GalleryPhotoActions;
 import masacre.galleryimage.interfaces.OnGalleryItemAdded;
-import masacre.galleryimage.interfaces.OnPhotoClickListener;
+import masacre.galleryimage.interfaces.OnGalleryItemClick;
 import masacre.galleryimage.model.GalleryAlbum;
 import masacre.galleryimage.model.GalleryItem;
 import masacre.galleryimage.utils.GalleryUtils;
 import masacre.galleryimage.utils.SpacesItemDecoration;
+import masacre.galleryimage.viewholder.GalleryPhotoViewHolder;
 
-public class GalleryFragment extends Fragment implements OnGalleryItemAdded, OnPhotoClickListener {
+public class GalleryFragment extends Fragment implements OnGalleryItemAdded, OnGalleryItemClick {
     private static final String GALLERY_ITEMS = "GALLERY_ITEMS";
     private static final String GALLERY_ALBUM = "GALLERY_ALBUM";
     public static final int MAX_COLUMN = 3;
 
     private RecyclerView recyclerView;
+    private View view;
     private GalleryAdapter galleryAdapter;
 
-    private List<GalleryItem> galleryItems;
     private GalleryAlbum galleryAlbum;
     private ImageView expandedImageView;
     private Animator mCurrentAnimator;
-    private View view;
+    private boolean isEditModeEnabled;
 
-    public static GalleryFragment newInstance(ArrayList<GalleryItem> galleryItems) {
+    public static GalleryFragment newInstance(@NonNull final ArrayList<GalleryItem> galleryItems) {
         GalleryFragment fragment = new GalleryFragment();
         Bundle arguments = new Bundle();
         arguments.putParcelableArrayList(GALLERY_ITEMS, galleryItems);
@@ -56,7 +57,7 @@ public class GalleryFragment extends Fragment implements OnGalleryItemAdded, OnP
         return fragment;
     }
 
-    public static GalleryFragment newInstance(GalleryAlbum galleryAlbum) {
+    public static GalleryFragment newInstance(@NonNull final GalleryAlbum galleryAlbum) {
         GalleryFragment fragment = new GalleryFragment();
         Bundle arguments = new Bundle();
         arguments.putParcelable(GALLERY_ALBUM, galleryAlbum);
@@ -66,47 +67,33 @@ public class GalleryFragment extends Fragment implements OnGalleryItemAdded, OnP
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(final LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable final Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.gallery_fragment, container, false);
 
-        Bundle arguments = getArguments();
+        final Bundle arguments = getArguments();
         if (arguments != null) {
-            galleryItems = arguments.getParcelableArrayList(GALLERY_ITEMS);
+            List<GalleryItem> galleryItems = arguments.getParcelableArrayList(GALLERY_ITEMS);
             if (galleryItems == null) {
                 galleryItems = new ArrayList<>();
             }
             galleryAlbum = arguments.getParcelable(GALLERY_ALBUM);
-        }
-
-        recyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
-        expandedImageView = (ImageView) view.findViewById(R.id.expanded_image);
-        recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), MAX_COLUMN));
-        recyclerView.addItemDecoration(new SpacesItemDecoration(getResources().getDimensionPixelSize(R.dimen.medium_padding)));
-        galleryAdapter = new GalleryAdapter(galleryItems, getAlbumClickListener(), (GalleryActivity) getActivity(), this, galleryAlbum);
-        recyclerView.setAdapter(galleryAdapter);
-        if (galleryAlbum != null && galleryItems.isEmpty()) {
-            GalleryUtils.retrieveFileFromDirectory(galleryAlbum.getFile(), this);
+            recyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
+            expandedImageView = (ImageView) view.findViewById(R.id.expanded_image);
+            recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), MAX_COLUMN));
+            recyclerView.addItemDecoration(new SpacesItemDecoration(getResources().getDimensionPixelSize(R.dimen.medium_padding)));
+            galleryAdapter = new GalleryAdapter(galleryItems, this, (GalleryPhotoActions) getActivity());
+            recyclerView.setAdapter(galleryAdapter);
+            if (galleryAlbum != null && galleryItems.isEmpty()) {
+                GalleryUtils.retrieveFileFromDirectory(galleryAlbum.getFile(), this);
+            }
         }
 
         return view;
     }
 
-    private OnAlbumClickListener getAlbumClickListener() {
-        return new OnAlbumClickListener() {
-            @Override
-            public void onAlbumClick(View view, GalleryAlbum galleryAlbum) {
-                FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                Fragment fragment = GalleryFragment.newInstance(galleryAlbum);
-
-                transaction.add(R.id.main_content, fragment, fragment.getClass().getName());
-                transaction.addToBackStack(fragment.getClass().getName());
-                transaction.commitAllowingStateLoss();
-            }
-        };
-    }
-
     @Override
-    public void onGalleryItemAdded(GalleryItem galleryItem) {
+    public void onGalleryItemAdded(final GalleryItem galleryItem) {
+        galleryAlbum.addChild(galleryItem);
         galleryAdapter.addGalleryItem(galleryItem);
     }
 
@@ -246,7 +233,29 @@ public class GalleryFragment extends Fragment implements OnGalleryItemAdded, OnP
     }
 
     @Override
-    public void onPhotoClickListener(ImageView photo, Bitmap bitmap) {
-        zoomImageFromThumb(photo, bitmap);
+    public void onAlbumClick(final View view, final GalleryAlbum galleryAlbum) {
+        final FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        final Fragment fragment = GalleryFragment.newInstance(galleryAlbum);
+
+        transaction.add(R.id.main_content, fragment, fragment.getClass().getName());
+        transaction.addToBackStack(fragment.getClass().getName());
+        transaction.commitAllowingStateLoss();
+    }
+
+    @Override
+    public void onPhotoClickListener(final GalleryPhotoViewHolder viewHolder, final ImageView photoImageView, final Bitmap bitmap) {
+        if (isEditModeEnabled) {
+            viewHolder.updateSelectedPhoto();
+            if (!galleryAlbum.hasPhotosSelected()) {
+                isEditModeEnabled = false;
+            }
+        } else {
+            zoomImageFromThumb(photoImageView, bitmap);
+        }
+    }
+
+    @Override
+    public void onPhotoLongClickListener() {
+        isEditModeEnabled = true;
     }
 }

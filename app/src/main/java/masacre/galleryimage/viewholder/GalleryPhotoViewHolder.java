@@ -9,34 +9,43 @@ import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import masacre.galleryimage.R;
-import masacre.galleryimage.activities.GalleryActivity;
-import masacre.galleryimage.interfaces.OnPhotoClickListener;
+import masacre.galleryimage.interfaces.GalleryPhotoActions;
+import masacre.galleryimage.interfaces.OnGalleryItemClick;
+import masacre.galleryimage.model.GalleryAlbum;
 import masacre.galleryimage.model.GalleryItem;
 import masacre.galleryimage.model.GalleryPhoto;
 import masacre.galleryimage.utils.ImageLoaderUtils;
 
 public class GalleryPhotoViewHolder extends GalleryViewHolder implements View.OnClickListener, ImageLoadingListener, View.OnLongClickListener {
-    private final ImageView photoImageView;
-    private final ImageView selectedImageView;
-    private final GalleryActivity galleryActivity;
+    private ImageView photoImageView;
+    private ImageView selectedImageView;
     private GalleryPhoto galleryPhoto;
-    private OnPhotoClickListener onPhotoClickListener;
+    private OnGalleryItemClick onGalleryItemClick;
+    private GalleryPhotoActions galleryPhotoActions;
     private Bitmap bitmap;
 
-    public GalleryPhotoViewHolder(View itemView, GalleryActivity galleryActivity, OnPhotoClickListener onPhotoClickListener) {
+    public GalleryPhotoViewHolder(final View itemView, final OnGalleryItemClick onGalleryItemClick, final GalleryPhotoActions galleryPhotoActions) {
         super(itemView);
-        this.galleryActivity = galleryActivity;
-        itemView.setOnClickListener(this);
-        itemView.setOnLongClickListener(this);
-        this.onPhotoClickListener = onPhotoClickListener;
+        setupItemViewListeners(itemView);
+        this.onGalleryItemClick = onGalleryItemClick;
+        this.galleryPhotoActions = galleryPhotoActions;
+        findViews(itemView);
+    }
+
+    private void findViews(View itemView) {
         photoImageView = (ImageView) itemView.findViewById(R.id.photo);
         selectedImageView = (ImageView) itemView.findViewById(R.id.selected_image);
+    }
+
+    private void setupItemViewListeners(View itemView) {
+        itemView.setOnClickListener(this);
+        itemView.setOnLongClickListener(this);
     }
 
     @Override
     public void show(GalleryItem galleryItem) {
         galleryPhoto = (GalleryPhoto) galleryItem;
-        if (galleryActivity.isPhotoSelected(galleryPhoto)) {
+        if (galleryPhotoActions.isPhotoSelected(galleryPhoto)) {
             selectedImageView.setVisibility(View.VISIBLE);
         }
         ImageLoaderUtils.displayImage(Uri.fromFile(galleryPhoto.getFile()).toString().replace("%20", " "), photoImageView, this);
@@ -44,22 +53,7 @@ public class GalleryPhotoViewHolder extends GalleryViewHolder implements View.On
 
     @Override
     public void onClick(View view) {
-        if (galleryActivity.isEditModeEnabled()) {
-            if (galleryActivity.isPhotoSelected(galleryPhoto)) {
-                galleryActivity.removePhotoSelected(galleryPhoto);
-                selectedImageView.setVisibility(View.GONE);
-                galleryPhoto.getParent().removePhotoSelected(galleryPhoto);
-                if (!galleryPhoto.getParent().hasPhotoSelected()) {
-                    galleryActivity.disableEditMode();
-                }
-            } else {
-                galleryActivity.addPhotoSelected(galleryPhoto);
-                selectedImageView.setVisibility(View.VISIBLE);
-                galleryPhoto.getParent().addPhotoSelected(galleryPhoto);
-            }
-        } else {
-            onPhotoClickListener.onPhotoClickListener(photoImageView, bitmap);
-        }
+        onGalleryItemClick.onPhotoClickListener(this, photoImageView, bitmap);
     }
 
 
@@ -85,14 +79,30 @@ public class GalleryPhotoViewHolder extends GalleryViewHolder implements View.On
 
     @Override
     public boolean onLongClick(View view) {
-        galleryActivity.enableEditMode();
-        if (galleryActivity.isPhotoSelected(galleryPhoto)) {
-            galleryActivity.removePhotoSelected(galleryPhoto);
+        onGalleryItemClick.onPhotoLongClickListener();
+        final GalleryAlbum parent = galleryPhoto.getParent();
+        if (parent.isPhotoSelected(galleryPhoto)) {
+            parent.unselectPhoto(galleryPhoto);
+            galleryPhotoActions.unselectPhoto(galleryPhoto);
             selectedImageView.setVisibility(View.GONE);
         } else {
-            galleryActivity.addPhotoSelected(galleryPhoto);
+            parent.selectPhoto(galleryPhoto);
+            galleryPhotoActions.selectPhoto(galleryPhoto);
             selectedImageView.setVisibility(View.VISIBLE);
         }
         return true;
+    }
+
+    public void updateSelectedPhoto() {
+        final GalleryAlbum parent = galleryPhoto.getParent();
+        if (parent.isPhotoSelected(galleryPhoto)) {
+            selectedImageView.setVisibility(View.GONE);
+            galleryPhotoActions.selectPhoto(galleryPhoto);
+            parent.unselectPhoto(galleryPhoto);
+        } else {
+            selectedImageView.setVisibility(View.VISIBLE);
+            galleryPhotoActions.unselectPhoto(galleryPhoto);
+            parent.selectPhoto(galleryPhoto);
+        }
     }
 }
