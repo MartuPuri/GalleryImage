@@ -17,28 +17,6 @@ public class GalleryPhoto extends GalleryItem {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeSerializable(imageFile);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    public static final Creator<GalleryPhoto> CREATOR = new Creator<GalleryPhoto>() {
-        @Override
-        public GalleryPhoto createFromParcel(Parcel in) {
-            return new GalleryPhoto(in);
-        }
-
-        @Override
-        public GalleryPhoto[] newArray(int size) {
-            return new GalleryPhoto[size];
-        }
-    };
-
-    @Override
     public boolean isAlbum() {
         return false;
     }

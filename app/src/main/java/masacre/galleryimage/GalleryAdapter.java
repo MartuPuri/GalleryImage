@@ -9,7 +9,6 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.List;
 
-import masacre.galleryimage.interfaces.GalleryPhotoActions;
 import masacre.galleryimage.interfaces.OnGalleryItemClick;
 import masacre.galleryimage.model.GalleryItem;
 import masacre.galleryimage.viewholder.GalleryAlbumViewHolder;
@@ -19,15 +18,13 @@ import masacre.galleryimage.viewholder.GalleryViewHolder;
 public class GalleryAdapter extends RecyclerView.Adapter<GalleryViewHolder> {
     private List<GalleryItem> galleryItems;
     private final OnGalleryItemClick onGalleryItemClick;
-    private final GalleryPhotoActions galleryPhotoActions;
 
-    public GalleryAdapter(List<GalleryItem> galleryItems, OnGalleryItemClick onGalleryItemClick, GalleryPhotoActions galleryPhotoActions) {
+    public GalleryAdapter(List<GalleryItem> galleryItems, OnGalleryItemClick onGalleryItemClick) {
         this.galleryItems = new ArrayList<>();
         if (galleryItems != null) {
             this.galleryItems.addAll(galleryItems);
         }
         this.onGalleryItemClick = onGalleryItemClick;
-        this.galleryPhotoActions = galleryPhotoActions;
     }
 
     @Override
@@ -35,7 +32,7 @@ public class GalleryAdapter extends RecyclerView.Adapter<GalleryViewHolder> {
         LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         if (GalleryType.PHOTO.ordinal() == viewType) {
             View view = inflater.inflate(R.layout.gallery_photo, parent, false);
-            return new GalleryPhotoViewHolder(view, onGalleryItemClick, galleryPhotoActions);
+            return new GalleryPhotoViewHolder(view, onGalleryItemClick);
         } else if (GalleryType.ALBUM.ordinal() == viewType) {
             View view = inflater.inflate(R.layout.gallery_album, parent, false);
             return new GalleryAlbumViewHolder(view, onGalleryItemClick);

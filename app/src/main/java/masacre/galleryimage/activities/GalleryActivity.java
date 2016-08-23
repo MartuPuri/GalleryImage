@@ -7,23 +7,18 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 import masacre.galleryimage.R;
 import masacre.galleryimage.fragments.GalleryFragment;
-import masacre.galleryimage.interfaces.GalleryPhotoActions;
 import masacre.galleryimage.model.GalleryItem;
-import masacre.galleryimage.model.GalleryPhoto;
 
-public class GalleryActivity extends AppCompatActivity implements GalleryPhotoActions {
+public class GalleryActivity extends AppCompatActivity {
 
     private static final String GALLERY_ITEMS = "GALLERY_ITEMS";
-    private final Set<GalleryPhoto> selectedPhotos = new HashSet<>();
 
     public static Intent getIntent(Context context, ArrayList<GalleryItem> galleryItems) {
         Intent intent = new Intent(context, GalleryActivity.class);
-        intent.putParcelableArrayListExtra(GALLERY_ITEMS, galleryItems);
+        intent.putExtra(GALLERY_ITEMS, galleryItems);
         return intent;
     }
 
@@ -33,27 +28,12 @@ public class GalleryActivity extends AppCompatActivity implements GalleryPhotoAc
         setContentView(R.layout.gallery_activity);
 
         if (savedInstanceState == null) {
-            ArrayList<GalleryItem> galleryItems = getIntent().getParcelableArrayListExtra(GALLERY_ITEMS);
+            ArrayList<GalleryItem> galleryItems = (ArrayList<GalleryItem>) getIntent().getSerializableExtra(GALLERY_ITEMS);
             GalleryFragment fragment = GalleryFragment.newInstance(galleryItems);
             getSupportFragmentManager()
                     .beginTransaction()
                     .add(R.id.main_content, fragment)
                     .commit();
         }
-    }
-
-    @Override
-    public void selectPhoto(GalleryPhoto galleryPhoto) {
-        selectedPhotos.add(galleryPhoto);
-    }
-
-    @Override
-    public void unselectPhoto(GalleryPhoto galleryPhoto) {
-        selectedPhotos.remove(galleryPhoto);
-    }
-
-    @Override
-    public boolean isPhotoSelected(GalleryPhoto galleryPhoto) {
-        return selectedPhotos.contains(galleryPhoto);
     }
 }

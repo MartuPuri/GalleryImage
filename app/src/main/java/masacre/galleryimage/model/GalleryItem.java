@@ -1,9 +1,9 @@
 package masacre.galleryimage.model;
 
 
-import android.os.Parcelable;
+import java.io.Serializable;
 
-public abstract class GalleryItem implements Parcelable{
+public abstract class GalleryItem implements Serializable {
     private GalleryAlbum parent;
 
     public abstract boolean isAlbum();

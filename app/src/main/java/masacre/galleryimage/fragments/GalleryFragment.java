@@ -26,7 +26,7 @@ import java.util.List;
 
 import masacre.galleryimage.GalleryAdapter;
 import masacre.galleryimage.R;
-import masacre.galleryimage.interfaces.GalleryPhotoActions;
+import masacre.galleryimage.activities.GalleryActivity;
 import masacre.galleryimage.interfaces.OnGalleryItemAdded;
 import masacre.galleryimage.interfaces.OnGalleryItemClick;
 import masacre.galleryimage.model.GalleryAlbum;
@@ -52,7 +52,7 @@ public class GalleryFragment extends Fragment implements OnGalleryItemAdded, OnG
     public static GalleryFragment newInstance(@NonNull final ArrayList<GalleryItem> galleryItems) {
         GalleryFragment fragment = new GalleryFragment();
         Bundle arguments = new Bundle();
-        arguments.putParcelableArrayList(GALLERY_ITEMS, galleryItems);
+        arguments.putSerializable(GALLERY_ITEMS, galleryItems);
         fragment.setArguments(arguments);
         return fragment;
     }
@@ -60,7 +60,7 @@ public class GalleryFragment extends Fragment implements OnGalleryItemAdded, OnG
     public static GalleryFragment newInstance(@NonNull final GalleryAlbum galleryAlbum) {
         GalleryFragment fragment = new GalleryFragment();
         Bundle arguments = new Bundle();
-        arguments.putParcelable(GALLERY_ALBUM, galleryAlbum);
+        arguments.putSerializable(GALLERY_ALBUM, galleryAlbum);
         fragment.setArguments(arguments);
         return fragment;
     }
@@ -72,16 +72,16 @@ public class GalleryFragment extends Fragment implements OnGalleryItemAdded, OnG
 
         final Bundle arguments = getArguments();
         if (arguments != null) {
-            List<GalleryItem> galleryItems = arguments.getParcelableArrayList(GALLERY_ITEMS);
+            List<GalleryItem> galleryItems = (List<GalleryItem>) arguments.getSerializable(GALLERY_ITEMS);
             if (galleryItems == null) {
                 galleryItems = new ArrayList<>();
             }
-            galleryAlbum = arguments.getParcelable(GALLERY_ALBUM);
+            galleryAlbum = (GalleryAlbum) arguments.getSerializable(GALLERY_ALBUM);
             recyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
             expandedImageView = (ImageView) view.findViewById(R.id.expanded_image);
             recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), MAX_COLUMN));
             recyclerView.addItemDecoration(new SpacesItemDecoration(getResources().getDimensionPixelSize(R.dimen.medium_padding)));
-            galleryAdapter = new GalleryAdapter(galleryItems, this, (GalleryPhotoActions) getActivity());
+            galleryAdapter = new GalleryAdapter(galleryItems, this);
             recyclerView.setAdapter(galleryAdapter);
             if (galleryAlbum != null && galleryItems.isEmpty()) {
                 GalleryUtils.retrieveFileFromDirectory(galleryAlbum.getFile(), this);
@@ -171,9 +171,17 @@ public class GalleryFragment extends Fragment implements OnGalleryItemAdded, OnG
         set.setDuration(300);
         set.setInterpolator(new DecelerateInterpolator());
         set.addListener(new AnimatorListenerAdapter() {
+
+            @Override
+            public void onAnimationStart(Animator animation) {
+                super.onAnimationStart(animation);
+                expandedImageView.setBackgroundColor(getResources().getColor(android.R.color.transparent));
+            }
+
             @Override
             public void onAnimationEnd(Animator animation) {
                 mCurrentAnimator = null;
+                expandedImageView.setBackgroundColor(getResources().getColor(R.color.alpha_black));
             }
 
             @Override
@@ -246,8 +254,11 @@ public class GalleryFragment extends Fragment implements OnGalleryItemAdded, OnG
     public void onPhotoClickListener(final GalleryPhotoViewHolder viewHolder, final ImageView photoImageView, final Bitmap bitmap) {
         if (isEditModeEnabled) {
             viewHolder.updateSelectedPhoto();
-            if (!galleryAlbum.hasPhotosSelected()) {
+            if (galleryAlbum.hasPhotosSelected()) {
+                ((GalleryActivity) getActivity()).getSupportActionBar().setTitle(galleryAlbum.getAmountOfSelectedPhotos() + "/" + galleryAlbum.getAmountOfImages());
+            } else {
                 isEditModeEnabled = false;
+                ((GalleryActivity) getActivity()).getSupportActionBar().setTitle(galleryAlbum.getAlbumName());
             }
         } else {
             zoomImageFromThumb(photoImageView, bitmap);

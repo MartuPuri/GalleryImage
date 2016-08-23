@@ -9,7 +9,6 @@ import com.nostra13.universalimageloader.core.assist.FailReason;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import masacre.galleryimage.R;
-import masacre.galleryimage.interfaces.GalleryPhotoActions;
 import masacre.galleryimage.interfaces.OnGalleryItemClick;
 import masacre.galleryimage.model.GalleryAlbum;
 import masacre.galleryimage.model.GalleryItem;
@@ -21,14 +20,12 @@ public class GalleryPhotoViewHolder extends GalleryViewHolder implements View.On
     private ImageView selectedImageView;
     private GalleryPhoto galleryPhoto;
     private OnGalleryItemClick onGalleryItemClick;
-    private GalleryPhotoActions galleryPhotoActions;
     private Bitmap bitmap;
 
-    public GalleryPhotoViewHolder(final View itemView, final OnGalleryItemClick onGalleryItemClick, final GalleryPhotoActions galleryPhotoActions) {
+    public GalleryPhotoViewHolder(final View itemView, final OnGalleryItemClick onGalleryItemClick) {
         super(itemView);
         setupItemViewListeners(itemView);
         this.onGalleryItemClick = onGalleryItemClick;
-        this.galleryPhotoActions = galleryPhotoActions;
         findViews(itemView);
     }
 
@@ -45,7 +42,7 @@ public class GalleryPhotoViewHolder extends GalleryViewHolder implements View.On
     @Override
     public void show(GalleryItem galleryItem) {
         galleryPhoto = (GalleryPhoto) galleryItem;
-        if (galleryPhotoActions.isPhotoSelected(galleryPhoto)) {
+        if (galleryPhoto.getParent().isPhotoSelected(galleryPhoto)) {
             selectedImageView.setVisibility(View.VISIBLE);
         }
         ImageLoaderUtils.displayImage(Uri.fromFile(galleryPhoto.getFile()).toString().replace("%20", " "), photoImageView, this);
@@ -83,11 +80,9 @@ public class GalleryPhotoViewHolder extends GalleryViewHolder implements View.On
         final GalleryAlbum parent = galleryPhoto.getParent();
         if (parent.isPhotoSelected(galleryPhoto)) {
             parent.unselectPhoto(galleryPhoto);
-            galleryPhotoActions.unselectPhoto(galleryPhoto);
             selectedImageView.setVisibility(View.GONE);
         } else {
             parent.selectPhoto(galleryPhoto);
-            galleryPhotoActions.selectPhoto(galleryPhoto);
             selectedImageView.setVisibility(View.VISIBLE);
         }
         return true;
@@ -97,11 +92,9 @@ public class GalleryPhotoViewHolder extends GalleryViewHolder implements View.On
         final GalleryAlbum parent = galleryPhoto.getParent();
         if (parent.isPhotoSelected(galleryPhoto)) {
             selectedImageView.setVisibility(View.GONE);
-            galleryPhotoActions.selectPhoto(galleryPhoto);
             parent.unselectPhoto(galleryPhoto);
         } else {
             selectedImageView.setVisibility(View.VISIBLE);
-            galleryPhotoActions.unselectPhoto(galleryPhoto);
             parent.selectPhoto(galleryPhoto);
         }
     }
